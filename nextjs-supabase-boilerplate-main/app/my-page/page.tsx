@@ -75,10 +75,12 @@ export default function MyPage() {
       if (queryError) throw queryError;
       setOrders(data || []);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "주문 내역을 가져오는 중 오류가 발생했습니다.";
+      // Supabase 에러인 경우 message 속성에서 에러 메시지 추출
+      const supabaseError = err as { message?: string; code?: string };
+      const errorMessage = supabaseError.message || 
+        (err instanceof Error ? err.message : "주문 내역을 가져오는 중 오류가 발생했습니다.");
       setError(errorMessage);
-      console.error("Error fetching orders:", err);
+      console.error("Error fetching orders:", JSON.stringify(err, null, 2));
     } finally {
       setLoading(false);
     }

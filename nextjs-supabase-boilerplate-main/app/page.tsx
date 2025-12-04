@@ -26,12 +26,10 @@ async function getPopularProducts() {
       .limit(8);
 
     if (error) {
-      console.error("Error fetching popular products:", {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-      });
+      console.error("Error fetching popular products:", error);
+      console.error("Error stringified:", JSON.stringify(error, null, 2));
+      console.error("Supabase URL:", supabaseUrl ? "설정됨" : "미설정");
+      console.error("Supabase Key:", supabaseKey ? "설정됨" : "미설정");
       return [];
     }
 

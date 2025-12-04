@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { useAuth } from "@clerk/nextjs";
 import { useMemo } from "react";
 
@@ -30,7 +30,7 @@ import { useMemo } from "react";
  * }
  * ```
  */
-export function useClerkSupabaseClient() {
+export function useClerkSupabaseClient(): SupabaseClient {
   const { getToken } = useAuth();
 
   const supabase = useMemo(() => {
@@ -39,7 +39,15 @@ export function useClerkSupabaseClient() {
 
     return createClient(supabaseUrl, supabaseKey, {
       async accessToken() {
-        return (await getToken()) ?? null;
+        // getToken이 함수가 아닌 경우 null 반환 (로그인 안 된 상태)
+        if (typeof getToken !== "function") {
+          return null;
+        }
+        try {
+          return (await getToken()) ?? null;
+        } catch {
+          return null;
+        }
       },
     });
   }, [getToken]);
