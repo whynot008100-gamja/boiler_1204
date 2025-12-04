@@ -1,14 +1,23 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, TrendingUp, Sparkles } from "lucide-react";
-import { createClerkSupabaseClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 import { Product, CATEGORY_LABELS, ProductCategory } from "@/types/product";
 
 export const dynamic = "force-dynamic";
 
 async function getPopularProducts() {
   try {
-    const supabase = createClerkSupabaseClient();
+    // 홈페이지는 공개 페이지이므로 인증 없이 상품 조회
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn("Supabase 환경 변수가 설정되지 않았습니다.");
+      return [];
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -16,10 +25,22 @@ async function getPopularProducts() {
       .order("created_at", { ascending: false })
       .limit(8);
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching popular products:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
+      return [];
+    }
+
     return data || [];
   } catch (error) {
-    console.error("Error fetching popular products:", error);
+    console.error("Error fetching popular products:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return [];
   }
 }
