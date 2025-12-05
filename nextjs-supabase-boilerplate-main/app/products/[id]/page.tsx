@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useClerkSupabaseClient } from "@/lib/supabase/clerk-client";
 import { useUser } from "@clerk/nextjs";
 import { Product } from "@/types/product";
@@ -13,7 +13,6 @@ import { AddToCartDialog } from "@/components/cart/AddToCartDialog";
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const { user } = useUser();
   const supabase = useClerkSupabaseClient();
   const productId = params.id as string;

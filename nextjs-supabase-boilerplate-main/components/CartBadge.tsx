@@ -1,39 +1,50 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useClerkSupabaseClient } from "@/lib/supabase/clerk-client";
 
 export function CartBadge() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const supabase = useClerkSupabaseClient();
   const [itemCount, setItemCount] = useState(0);
 
+  const fetchCartCount = useCallback(async () => {
+    if (!user || !supabase) {
+      setItemCount(0);
+      return;
+    }
+
+    try {
+      const { count, error } = await supabase
+        .from("cart_items")
+        .select("*", { count: "exact", head: true })
+        .eq("clerk_id", user.id);
+
+      if (error) {
+        console.error("Error fetching cart count:", error);
+        return;
+      }
+      setItemCount(count || 0);
+    } catch (error) {
+      console.error("Error fetching cart count:", error);
+    }
+  }, [user, supabase]);
+
   useEffect(() => {
+    if (!isLoaded) return;
+
     if (!user) {
       setItemCount(0);
       return;
     }
 
-    const fetchCartCount = async () => {
-      try {
-        const { count, error } = await supabase
-          .from("cart_items")
-          .select("*", { count: "exact", head: true })
-          .eq("clerk_id", user.id);
-
-        if (error) throw error;
-        setItemCount(count || 0);
-      } catch (error) {
-        console.error("Error fetching cart count:", error);
-      }
-    };
-
+    // 초기 로드
     fetchCartCount();
 
-    // 실시간 업데이트를 위한 구독 (선택사항)
+    // 실시간 업데이트를 위한 구독
     const channel = supabase
-      .channel("cart-changes")
+      .channel(`cart-changes-${user.id}`)
       .on(
         "postgres_changes",
         {
@@ -48,10 +59,38 @@ export function CartBadge() {
       )
       .subscribe();
 
+    // 페이지 포커스 시에도 업데이트
+    const handleFocus = () => {
+      fetchCartCount();
+    };
+    window.addEventListener("focus", handleFocus);
+
+    // 주기적으로 업데이트 (Realtime이 작동하지 않을 경우 대비)
+    const interval = setInterval(() => {
+      fetchCartCount();
+    }, 5000); // 5초마다
+
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener("focus", handleFocus);
+      clearInterval(interval);
     };
-  }, [user, supabase]);
+  }, [user, isLoaded, supabase, fetchCartCount]);
+
+  // 페이지 가시성 변경 시 업데이트
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && user) {
+        fetchCartCount();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [user, fetchCartCount]);
 
   if (itemCount === 0) return null;
 
