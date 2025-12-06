@@ -161,9 +161,6 @@ export default async function Home() {
                   key={product.id}
                   href={`/products/${product.id}`}
                   className="group"
-                  style={{
-                    animationDelay: `${index * 100}ms`,
-                  }}
                 >
                   <div className="product-card relative bg-card rounded-2xl border border-border/50 overflow-hidden hover:border-primary/30 hover:shadow-xl">
                     {/* Product Image Area */}
