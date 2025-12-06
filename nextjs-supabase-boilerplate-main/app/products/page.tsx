@@ -147,7 +147,6 @@ function ProductsPageContent() {
         return prev;
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   // 카테고리 변경 시 URL 업데이트

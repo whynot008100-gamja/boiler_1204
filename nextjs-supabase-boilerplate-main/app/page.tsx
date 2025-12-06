@@ -156,7 +156,7 @@ export default async function Home() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {popularProducts.map((product: Product, index: number) => (
+              {popularProducts.map((product: Product) => (
                 <Link
                   key={product.id}
                   href={`/products/${product.id}`}

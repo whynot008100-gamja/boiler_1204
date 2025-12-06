@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useClerkSupabaseClient } from "@/lib/supabase/clerk-client";
 
@@ -9,7 +9,7 @@ export function CartBadge() {
   const supabase = useClerkSupabaseClient();
   const [itemCount, setItemCount] = useState(0);
 
-  const fetchCartCount = async () => {
+  const fetchCartCount = useCallback(async () => {
     if (!user || !supabase) {
       setItemCount(0);
       return;
@@ -26,7 +26,7 @@ export function CartBadge() {
     } catch (error) {
       console.error("Error fetching cart count:", error);
     }
-  };
+  }, [user, supabase]);
 
   useEffect(() => {
     if (!user) {
@@ -71,7 +71,7 @@ export function CartBadge() {
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener("cartUpdated", handleCartUpdate);
     };
-  }, [user, supabase]);
+  }, [user, supabase, fetchCartCount]);
 
   if (itemCount === 0) return null;
 
